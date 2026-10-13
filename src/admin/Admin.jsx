@@ -49,6 +49,10 @@ export function AdminLogin() {
         <div className="demo-notice warning">
           Frontend-only demo access. This is not secure authentication. All changes reset on
           refresh.
+          <dl className="demo-credentials">
+            <div><dt>Demo username</dt><dd><code>admin</code></dd></div>
+            <div><dt>Demo password</dt><dd><code>Wattlink@123</code></dd></div>
+          </dl>
         </div>
         <form onSubmit={submit} noValidate>
           <div className="field">

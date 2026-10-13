@@ -1,0 +1,1077 @@
+import { useState } from "react";
+import { Link, useRouterState } from "@tanstack/react-router";
+import { useSite } from "./SiteContext";
+import { Button, Brand, Icon, Photo, Eyebrow, Modal } from "./UI";
+import { categories } from "../../data/siteData";
+import { visibleEntries, validateInquiry } from "../../data/rules";
+export function SiteShell({ children }) {
+  const site = useSite();
+  const [menu, setMenu] = useState(false);
+  const [dropdown, setDropdown] = useState(false);
+  const path = useRouterState({ select: (s) => s.location.pathname });
+  const close = () => {
+    setMenu(false);
+    setDropdown(false);
+  };
+  return (
+    <>
+      <div className="utility-bar">
+        <div className="container utility-inner">
+          <span>
+            <Icon name="pin" size={11} /> Mumbai, Maharashtra, India
+          </span>
+          <div className="utility-contacts">
+            <a href={`tel:${site.company.phone.replace(/\s/g, "")}`}>
+              <Icon name="phone" size={11} />
+              {site.company.phone}
+            </a>
+            <a href={`mailto:${site.company.email}`}>
+              <Icon name="mail" size={11} />
+              {site.company.email}
+            </a>
+          </div>
+        </div>
+      </div>
+      <header className="navbar">
+        <div className="container nav-inner">
+          <Link to="/" onClick={close} aria-label="Wattlink home">
+            <Brand text={site.settings.logoText} />
+          </Link>
+          <nav aria-label="Main navigation" className={`nav-links ${menu ? "mobile-open" : ""}`}>
+            {visibleEntries(site.navigation).map((item) =>
+              item.target === "/services" ? (
+                <div className="service-nav" key={item.id}>
+                  <div className="service-nav-toggle">
+                    <Link
+                      to={item.target}
+                      onClick={close}
+                      className={`nav-link ${path === item.target ? "active" : ""}`}
+                    >
+                      {item.label}
+                    </Link>
+                    <Button
+                      variant="icon"
+                      aria-label="Toggle services menu"
+                      aria-expanded={dropdown}
+                      onClick={() => setDropdown(!dropdown)}
+                    >
+                      <Icon name="chevron" size={12} />
+                    </Button>
+                  </div>
+                  {dropdown && (
+                    <div className="service-dropdown">
+                      {visibleEntries(site.services).map((s) => (
+                        <Link key={s.id} to="/services" search={{ service: s.id }} onClick={close}>
+                          {s.title}
+                        </Link>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <Link
+                  key={item.id}
+                  to={item.target}
+                  onClick={close}
+                  className={`nav-link ${path === item.target ? "active" : ""}`}
+                  aria-current={path === item.target ? "page" : undefined}
+                >
+                  {item.label}
+                </Link>
+              ),
+            )}
+          </nav>
+          {site.settings.showConsultation && (
+            <Button to="/contact" className="nav-consultation">
+              Request a Consultation <Icon name="diagonal" size={13} />
+            </Button>
+          )}
+          <Button
+            variant="icon"
+            className="mobile-toggle"
+            aria-label="Toggle navigation"
+            aria-expanded={menu}
+            onClick={() => setMenu(!menu)}
+          >
+            <Icon name={menu ? "close" : "menu"} />
+          </Button>
+        </div>
+      </header>
+      <main>{children}</main>
+      <ConsultationBand />
+      <Footer />
+    </>
+  );
+}
+function Footer() {
+  const { company, services, navigation, footerLinks, settings } = useSite();
+  return (
+    <footer className="footer">
+      <div className="container">
+        <div className="footer-grid">
+          <div>
+            <Brand text={settings.logoText} />
+            <p>{company.footerDescription}</p>
+            <p>{company.name}</p>
+          </div>
+          <div>
+            <h4>Quick Links</h4>
+            <ul>
+              {visibleEntries(navigation).map((n) => (
+                <li key={n.id}>
+                  <Link to={n.target}>{n.label}</Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+          <div>
+            <h4>Our Services</h4>
+            <ul>
+              {visibleEntries(services).map((s) => (
+                <li key={s.id}>
+                  <Link to="/services" search={{ service: s.id }}>
+                    {s.title}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+          <div>
+            <h4>Get in Touch</h4>
+            <ul className="footer-contact">
+              <li>
+                <Icon name="pin" />
+                <span>{company.address}</span>
+              </li>
+              <li>
+                <Icon name="phone" />
+                <a href={`tel:${company.phone.replace(/\s/g, "")}`}>{company.phone}</a>
+              </li>
+              <li>
+                <Icon name="mail" />
+                <a href={`mailto:${company.email}`}>{company.email}</a>
+              </li>
+            </ul>
+          </div>
+        </div>
+        <div className="footer-bottom">
+          <span>
+            © {new Date().getUTCFullYear()} Wattlink Engineering and Consulting Private Limited. All
+            rights reserved.
+          </span>
+          <div className="footer-legal">
+            {visibleEntries(footerLinks).map((l) => (
+              <Link key={l.id} to={l.target}>
+                {l.label}
+              </Link>
+            ))}
+            <Link to="/admin/login">{settings.adminLabel}</Link>
+          </div>
+        </div>
+        {settings.creditVisible && <div className="footer-credit">{company.footerCredit}</div>}
+      </div>
+    </footer>
+  );
+}
+function ConsultationBand() {
+  return (
+    <section className="cta-band">
+      <div className="container cta-inner">
+        <div>
+          <Eyebrow>LET’S BUILD SOMETHING BETTER</Eyebrow>
+          <h2>Your next project starts with a conversation.</h2>
+          <p>Bring us your requirements. Let’s find the right engineering solution together.</p>
+        </div>
+        <Button to="/contact" variant="orange">
+          Request a Consultation <Icon name="diagonal" size={17} />
+        </Button>
+      </div>
+    </section>
+  );
+}
+export function PageHeading({ title, description, eyebrow }) {
+  return (
+    <section className="page-heading">
+      <div className="container">
+        <div className="breadcrumb">
+          <Link to="/">Home</Link> / <span>{eyebrow || title}</span>
+        </div>
+        <Eyebrow>{eyebrow || "WATTLINK ENGINEERING"}</Eyebrow>
+        <h1>{title}</h1>
+        <p>{description}</p>
+      </div>
+    </section>
+  );
+}
+export function Home() {
+  const { homepage, services, projects, industries, process } = useSite();
+  const featured = (list, ids, count) => {
+    const selected = visibleEntries(list).filter((x) =>
+      ids
+        .split(",")
+        .map((v) => v.trim())
+        .includes(x.id),
+    );
+    return selected.length ? selected : visibleEntries(list).slice(0, count);
+  };
+  const exact = homepage.headline === "Integrated Engineering Solutions for Modern Infrastructure";
+  return (
+    <SiteShell>
+      <section className="hero">
+        <div className="hero-photo">
+          <img
+            src={homepage.image}
+            alt="Contemporary commercial infrastructure and landscaped glass office building"
+            width="1920"
+            height="1024"
+            fetchPriority="high"
+            onError={(e) => {
+              e.currentTarget.style.visibility = "hidden";
+            }}
+          />
+        </div>
+        <div className="container hero-inner">
+          <Eyebrow>ENGINEERING PRECISION. CONNECTED SOLUTIONS.</Eyebrow>
+          <h1>
+            {exact ? (
+              <>
+                Integrated Engineering
+                <br />
+                Solutions for{" "}
+                <span>
+                  Modern
+                  <br />
+                  Infrastructure
+                </span>
+              </>
+            ) : (
+              homepage.headline
+            )}
+          </h1>
+          <p>{homepage.description}</p>
+          <div className="hero-actions">
+            <Button to="/services">
+              {homepage.primaryLabel}
+              <Icon name="diagonal" size={16} />
+            </Button>
+            <Button to="/contact" variant="outline">
+              {homepage.secondaryLabel}
+              <Icon name="arrow" size={16} />
+            </Button>
+          </div>
+          <div className="hero-notes">
+            <span>
+              <Icon name="check" size={14} /> Integrated expertise
+            </span>
+            <span>
+              <Icon name="check" size={14} /> Coordinated delivery
+            </span>
+            <span>
+              <Icon name="check" size={14} /> Safety-conscious planning
+            </span>
+          </div>
+        </div>
+        <div className="hero-caption">
+          <Icon name="building" size={22} />
+          <span>
+            Engineering the spaces of tomorrow<small>INTEGRATED BUILDING SYSTEMS</small>
+          </span>
+        </div>
+      </section>
+      <div className="trust-strip">
+        <div className="container trust-inner">
+          {[
+            ["layers", "Integrated Engineering"],
+            ["tool", "Practical Technical Solutions"],
+            ["shield", "Safety-Conscious Approach"],
+            ["building", "Built Around Your Project"],
+          ].map(([icon, label]) => (
+            <div className="trust-item" key={label}>
+              <Icon name={icon} />
+              {label}
+            </div>
+          ))}
+        </div>
+      </div>
+      {homepage.showAbout && (
+        <section className="section">
+          <div className="container">
+            <AboutBlock />
+          </div>
+        </section>
+      )}
+      {homepage.showServices && (
+        <section className="section steel-section">
+          <div className="container">
+            <SectionHeader
+              eyebrow="OUR ENGINEERING EXPERTISE"
+              title="One partner. Integrated solutions."
+              description="From essential building systems to smart infrastructure, our services work together — just as your project should."
+              to="/services"
+              action="View All Services"
+            />
+            <ServiceGrid entries={featured(services, homepage.featuredServices, 3)} />
+            <p className="section-footnote">
+              Electrical. Plumbing. Mechanical. Fire Protection. Smart Security.{" "}
+              <Link to="/services">
+                Explore our capabilities <Icon name="arrow" size={12} />
+              </Link>
+            </p>
+          </div>
+        </section>
+      )}
+      {homepage.showProjects && (
+        <section className="section navy-section">
+          <div className="container">
+            <SectionHeader
+              eyebrow="PROJECT POSSIBILITIES"
+              title="Engineering in perspective."
+              description="Explore illustrative concepts across our core engineering disciplines. All featured projects are demo examples."
+              to="/projects"
+              action="Explore Projects"
+            />
+            <ProjectGrid entries={featured(projects, homepage.featuredProjects, 3)} />
+          </div>
+        </section>
+      )}
+      {homepage.showIndustries && (
+        <section className="section">
+          <div className="container">
+            <SectionHeader
+              eyebrow="INDUSTRIES WE SERVE"
+              title="Different spaces. The same commitment."
+              description="Building-services solutions shaped around the needs of your environment."
+              to="/industries"
+              action="All Industries"
+            />
+            <IndustryGrid entries={visibleEntries(industries).slice(0, 3)} compact />
+          </div>
+        </section>
+      )}
+      {homepage.showProcess && (
+        <section className="section steel-section">
+          <div className="container">
+            <SectionHeader
+              eyebrow="OUR WORKING PROCESS"
+              title="Clarity at every stage."
+              description="A considered, coordinated approach — from the first conversation to ongoing support."
+            />
+            <ProcessGrid entries={visibleEntries(process)} />
+          </div>
+        </section>
+      )}
+      <WhyChoose />
+    </SiteShell>
+  );
+}
+function SectionHeader({ eyebrow, title, description, to, action }) {
+  return (
+    <div className="section-header">
+      <div>
+        <Eyebrow>{eyebrow}</Eyebrow>
+        <h2>{title}</h2>
+        {description && <p>{description}</p>}
+      </div>
+      {to && (
+        <Button to={to} variant="ghost">
+          {action}
+          <Icon name="arrow" size={17} />
+        </Button>
+      )}
+    </div>
+  );
+}
+function AboutBlock({ detail = false }) {
+  const { company, homepage } = useSite();
+  return (
+    <>
+      <div className="about-layout">
+        <div className="about-photo">
+          <Photo
+            src={homepage.aboutImage}
+            alt="Modern workplace with coordinated building infrastructure"
+          />
+          <div className="about-label">
+            Connected expertise.
+            <br />
+            Considered engineering.<small>ONE COORDINATED APPROACH</small>
+          </div>
+        </div>
+        <div className="about-copy">
+          <Eyebrow>ABOUT WATTLINK</Eyebrow>
+          <h2>
+            Engineering that connects
+            <br />
+            every part of your project.
+          </h2>
+          <p>{detail ? company.description : homepage.aboutText}</p>
+          <p>
+            We connect electrical, plumbing, mechanical and smart building systems through technical
+            planning, clear communication and quality-focused execution.
+          </p>
+          <ul className="check-list">
+            {[
+              "Integrated service delivery",
+              "Practical, project-led planning",
+              "Coordinated execution",
+              "Reliable technical support",
+            ].map((v) => (
+              <li key={v}>
+                <Icon name="check" size={15} />
+                {v}
+              </li>
+            ))}
+          </ul>
+          <Button to={detail ? "/contact" : "/about"} variant="ghost">
+            {detail ? "Talk About Your Project" : "Discover Wattlink"}
+            <Icon name="arrow" size={17} />
+          </Button>
+        </div>
+      </div>
+      {detail && (
+        <div className="value-grid">
+          <div>
+            <Eyebrow>OUR VISION</Eyebrow>
+            <h3>Thoughtfully engineered spaces.</h3>
+            <p>{company.vision}</p>
+          </div>
+          <div>
+            <Eyebrow>OUR MISSION</Eyebrow>
+            <h3>Coordinated expertise in action.</h3>
+            <p>{company.mission}</p>
+          </div>
+          <div>
+            <Eyebrow>OUR CORE VALUES</Eyebrow>
+            <ul className="capability-list">
+              {company.values
+                .split("\n")
+                .filter(Boolean)
+                .map((v) => (
+                  <li key={v}>
+                    <Icon name="check" size={16} />
+                    {v}
+                  </li>
+                ))}
+            </ul>
+          </div>
+          <div>
+            <Eyebrow>OUR APPROACH</Eyebrow>
+            <h3>Quality, coordination and communication.</h3>
+            <p>
+              We align technical disciplines, plan with safety in mind and keep clients informed
+              through each stage. Our focus is a practical solution that fits the project.
+            </p>
+          </div>
+        </div>
+      )}
+    </>
+  );
+}
+export function AboutPage() {
+  return (
+    <SiteShell>
+      <PageHeading
+        title="Connected expertise. Considered engineering."
+        eyebrow="About Us"
+        description="An integrated approach to the infrastructure behind modern buildings."
+      />
+      <section className="section">
+        <div className="container">
+          <AboutBlock detail />
+        </div>
+      </section>
+      <WhyChoose />
+    </SiteShell>
+  );
+}
+export function ServiceGrid({ entries }) {
+  const [selected, setSelected] = useState(null);
+  return (
+    <>
+      <div className="service-grid">
+        {entries.map((s, i) => (
+          <article className="service-card" key={s.id}>
+            <Photo src={s.image} alt={s.title + " infrastructure"} />
+            <div className="service-content">
+              <div className="service-index">
+                <span>0{i + 1} / ENGINEERING SERVICES</span>
+                <Icon
+                  name={
+                    s.category === "Electrical"
+                      ? "bolt"
+                      : s.category === "Fire Safety"
+                        ? "shield"
+                        : "layers"
+                  }
+                  size={20}
+                />
+              </div>
+              <h3>{s.title}</h3>
+              <p>{s.description}</p>
+              <Button variant="ghost" onClick={() => setSelected(s)}>
+                Learn More
+                <Icon name="arrow" size={15} />
+              </Button>
+            </div>
+          </article>
+        ))}
+      </div>
+      {!entries.length && <div className="empty-state">No services are currently published.</div>}
+      {selected && <ServiceModal service={selected} onClose={() => setSelected(null)} />}
+    </>
+  );
+}
+function ServiceModal({ service, onClose }) {
+  return (
+    <Modal title={service.title} onClose={onClose}>
+      <Photo className="modal-photo" src={service.image} alt={service.title} />
+      <div className="modal-body">
+        <p>{service.description}</p>
+        <h3>Key capabilities</h3>
+        <ul className="capability-list">
+          {service.capabilities
+            .split("\n")
+            .filter(Boolean)
+            .map((c) => (
+              <li key={c}>
+                <Icon name="check" size={16} />
+                {c}
+              </li>
+            ))}
+        </ul>
+        {service.category === "Fire Safety" && (
+          <p>
+            Services are subject to project scope. This description does not imply statutory
+            certification or regulatory approval.
+          </p>
+        )}
+        <Button to="/contact" onClick={onClose}>
+          Request a Consultation
+          <Icon name="arrow" size={16} />
+        </Button>
+      </div>
+    </Modal>
+  );
+}
+export function ServicesPage({ serviceId }) {
+  const { services } = useSite();
+  const [dismissed, setDismissed] = useState(null);
+  const selected = visibleEntries(services).find((s) => s.id === serviceId);
+  return (
+    <SiteShell>
+      <PageHeading
+        title="Integrated systems. Expert coordination."
+        eyebrow="Our Services"
+        description="Engineering and technical services for the systems that power, protect and connect your building."
+      />
+      <section className="section steel-section">
+        <div className="container">
+          <ServiceGrid entries={visibleEntries(services)} />
+        </div>
+      </section>
+      {selected && dismissed !== serviceId && (
+        <ServiceModal service={selected} onClose={() => setDismissed(serviceId)} />
+      )}
+    </SiteShell>
+  );
+}
+export function ProjectGrid({ entries }) {
+  const [selected, setSelected] = useState(null);
+  return (
+    <>
+      <div className="project-grid">
+        {entries.map((p) => (
+          <article className="project-card" key={p.id}>
+            <button
+              className="project-photo-button"
+              onClick={() => setSelected(p)}
+              aria-label={`View ${p.title}`}
+            >
+              <Photo src={p.image} alt={p.title} />
+              <span className="demo-tag">DEMO PROJECT</span>
+            </button>
+            <div className="project-info">
+              <div className="category">{p.category}</div>
+              <h3>{p.title}</h3>
+              <Button
+                variant="icon"
+                className="detail-button"
+                onClick={() => setSelected(p)}
+                aria-label={`View project details: ${p.title}`}
+              >
+                <Icon name="diagonal" size={18} />
+              </Button>
+            </div>
+          </article>
+        ))}
+      </div>
+      {!entries.length && <div className="empty-state">No projects in this category.</div>}
+      {selected && <ProjectModal project={selected} onClose={() => setSelected(null)} />}
+    </>
+  );
+}
+export function ProjectModal({ project, onClose }) {
+  const [imageIndex, setImageIndex] = useState(null);
+  const images = [
+    ...new Set([project.image, ...(project.gallery || "").split("\n").filter(Boolean)]),
+  ];
+  return (
+    <Modal title={imageIndex === null ? project.title : "Project gallery"} onClose={onClose} wide>
+      <Photo
+        className="modal-photo"
+        src={images[imageIndex ?? 0]}
+        alt={project.title + (imageIndex === null ? "" : ` — gallery image ${imageIndex + 1}`)}
+      />
+      {imageIndex === null ? (
+        <div className="modal-body">
+          <div className="modal-meta">
+            <span>DEMO PROJECT</span>
+            <span>{project.category}</span>
+            <span>{project.status}</span>
+          </div>
+          <p>{project.description}</p>
+          <p>
+            <strong>Location:</strong> {project.location || "Not specified"}
+          </p>
+          <p>
+            This is an illustrative sample, not a claim of completed work or a verified client
+            project.
+          </p>
+          <div className="gallery-thumbs">
+            {images.map((src, i) => (
+              <button
+                key={i}
+                onClick={() => setImageIndex(i)}
+                aria-label={`Open gallery image ${i + 1}`}
+              >
+                <Photo src={src} alt={`${project.title} gallery ${i + 1}`} />
+              </button>
+            ))}
+          </div>
+          <Button to="/contact" onClick={onClose} variant="ghost">
+            Discuss a Similar Project
+            <Icon name="arrow" size={16} />
+          </Button>
+        </div>
+      ) : (
+        <div className="lightbox-controls">
+          <Button
+            variant="outline"
+            onClick={() => setImageIndex((imageIndex - 1 + images.length) % images.length)}
+            aria-label="Previous image"
+          >
+            ←
+          </Button>
+          <span>
+            {imageIndex + 1} / {images.length}
+          </span>
+          <Button variant="ghost" onClick={() => setImageIndex(null)}>
+            Project details
+          </Button>
+          <Button
+            variant="outline"
+            onClick={() => setImageIndex((imageIndex + 1) % images.length)}
+            aria-label="Next image"
+          >
+            →
+          </Button>
+        </div>
+      )}
+    </Modal>
+  );
+}
+function Filters({ value, onChange, options = categories }) {
+  return (
+    <div className="filters" aria-label="Category filters">
+      {options.map((c) => (
+        <button
+          key={c}
+          className={`filter ${value === c ? "active" : ""}`}
+          aria-pressed={value === c}
+          onClick={() => onChange(c)}
+        >
+          {c}
+        </button>
+      ))}
+    </div>
+  );
+}
+export function ProjectsPage() {
+  const { projects, gallery } = useSite();
+  const [filter, setFilter] = useState("All");
+  const [galleryFilter, setGalleryFilter] = useState("All");
+  const [lightbox, setLightbox] = useState(null);
+  const galleryEntries = visibleEntries(gallery).filter(
+    (p) => galleryFilter === "All" || p.category === galleryFilter,
+  );
+  return (
+    <SiteShell>
+      <PageHeading
+        title="A closer look at engineering possibilities."
+        eyebrow="Projects & Gallery"
+        description="Illustrative project concepts across electrical, plumbing, mechanical and connected building systems. These are demo examples, not verified completed projects."
+      />
+      <section className="section">
+        <div className="container">
+          <Filters
+            value={filter}
+            onChange={setFilter}
+            options={[
+              ...new Set([...categories, ...visibleEntries(projects).map((p) => p.category)]),
+            ]}
+          />
+          <ProjectGrid
+            entries={visibleEntries(projects).filter(
+              (p) => filter === "All" || p.category === filter,
+            )}
+          />
+        </div>
+      </section>
+      <section className="section steel-section">
+        <div className="container">
+          <SectionHeader eyebrow="INFRASTRUCTURE IN FOCUS" title="Project gallery." />
+          <Filters
+            value={galleryFilter}
+            onChange={(v) => {
+              setGalleryFilter(v);
+              setLightbox(null);
+            }}
+            options={[
+              ...new Set([...categories, ...visibleEntries(gallery).map((p) => p.category)]),
+            ]}
+          />
+          <div className="project-grid">
+            {galleryEntries.map((g, i) => (
+              <button
+                className="project-photo-button"
+                key={g.id}
+                onClick={() => setLightbox(i)}
+                aria-label={`Open gallery: ${g.title}`}
+              >
+                <Photo src={g.image} alt={g.title} />
+                <span className="industry-caption">{g.title}</span>
+              </button>
+            ))}
+          </div>
+          {!galleryEntries.length && (
+            <div className="empty-state">No gallery images in this category.</div>
+          )}
+        </div>
+      </section>
+      {lightbox !== null && galleryEntries[lightbox] && (
+        <Modal title={galleryEntries[lightbox].title} wide onClose={() => setLightbox(null)}>
+          <Photo
+            className="modal-photo"
+            src={galleryEntries[lightbox].image}
+            alt={galleryEntries[lightbox].title}
+          />
+          <p className="gallery-description">{galleryEntries[lightbox].description}</p>
+          <div className="lightbox-controls">
+            <Button
+              variant="outline"
+              aria-label="Previous image"
+              onClick={() =>
+                setLightbox((lightbox - 1 + galleryEntries.length) % galleryEntries.length)
+              }
+            >
+              ←
+            </Button>
+            <span>
+              Demo gallery · {lightbox + 1} / {galleryEntries.length}
+            </span>
+            <Button
+              variant="outline"
+              aria-label="Next image"
+              onClick={() => setLightbox((lightbox + 1) % galleryEntries.length)}
+            >
+              →
+            </Button>
+          </div>
+        </Modal>
+      )}
+    </SiteShell>
+  );
+}
+function IndustryGrid({ entries, compact = false }) {
+  return (
+    <div className="industry-grid">
+      {entries.map((i) => (
+        <article className="industry-card" key={i.id}>
+          <Photo src={i.image} alt={i.title + " — target industry"} />
+          <h3>{i.title}</h3>
+          {!compact && <p>{i.description}</p>}
+        </article>
+      ))}
+    </div>
+  );
+}
+export function IndustriesPage() {
+  const { industries } = useSite();
+  return (
+    <SiteShell>
+      <PageHeading
+        title="Engineering for the spaces you build."
+        eyebrow="Industries We Serve"
+        description="Our target sectors span workplaces, homes and commercial infrastructure. These categories represent service focus, not verified client relationships."
+      />
+      <section className="section">
+        <div className="container">
+          <IndustryGrid entries={visibleEntries(industries)} />
+        </div>
+      </section>
+    </SiteShell>
+  );
+}
+function ProcessGrid({ entries }) {
+  return (
+    <div className="process-grid">
+      {entries.map((s, i) => (
+        <article className="process-step" key={s.id}>
+          <div className="process-number">0{i + 1}</div>
+          <h3>{s.title}</h3>
+          <p>{s.description}</p>
+        </article>
+      ))}
+    </div>
+  );
+}
+export function ProcessPage() {
+  const { process } = useSite();
+  return (
+    <SiteShell>
+      <PageHeading
+        title="A considered process. A coordinated outcome."
+        eyebrow="Our Process"
+        description="Clear communication and technical coordination at every stage of your project."
+      />
+      <section className="section">
+        <div className="container">
+          <ProcessGrid entries={visibleEntries(process)} />
+        </div>
+      </section>
+      <WhyChoose />
+    </SiteShell>
+  );
+}
+function WhyChoose() {
+  const { company } = useSite();
+  return (
+    <section className="section navy-section">
+      <div className="container">
+        <Eyebrow>WHY CHOOSE WATTLINK</Eyebrow>
+        <h2>{company.whyChoose}</h2>
+        <div className="why-grid">
+          {[
+            [
+              "layers",
+              "Integrated Engineering Services",
+              "Building disciplines working together, not in isolation.",
+            ],
+            [
+              "tool",
+              "Coordinated Technical Planning",
+              "A considered approach to interfaces, layouts and execution.",
+            ],
+            [
+              "building",
+              "Practical Infrastructure Solutions",
+              "Engineering shaped around real project requirements.",
+            ],
+            [
+              "shield",
+              "Safety-Conscious Approach",
+              "Thoughtful planning with safety at the forefront.",
+            ],
+            ["mail", "Clear Communication", "Keeping clients informed and priorities aligned."],
+            [
+              "clock",
+              "Client-Focused Support",
+              "Responsive technical support throughout the project.",
+            ],
+          ].map(([icon, title, text]) => (
+            <div className="why-item" key={title}>
+              <Icon name={icon} size={28} />
+              <div>
+                <h3>{title}</h3>
+                <p>{text}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+export function ContactPage() {
+  const { company, services, homepage, setInquiries } = useSite();
+  const [errors, setErrors] = useState({});
+  const [success, setSuccess] = useState(false);
+  function submit(e) {
+    e.preventDefault();
+    const values = Object.fromEntries(new FormData(e.currentTarget));
+    for (const key of Object.keys(values)) values[key] = values[key].trim();
+    const issues = validateInquiry(values);
+    setErrors(issues);
+    if (Object.keys(issues).length) return;
+    setInquiries((previous) => [
+      { ...values, id: crypto.randomUUID(), status: "New", createdAt: new Date().toISOString() },
+      ...previous,
+    ]);
+    setSuccess(true);
+  }
+  return (
+    <SiteShell>
+      <PageHeading
+        title="Let’s talk about your next project."
+        eyebrow="Contact Us"
+        description="Tell us what you are planning. We’ll help you explore a coordinated engineering approach."
+      />
+      <section className="section">
+        <div className="container contact-layout">
+          <div className="contact-copy">
+            <Eyebrow>START A CONVERSATION</Eyebrow>
+            <h2>
+              Good engineering starts
+              <br />
+              with understanding.
+            </h2>
+            <p>{company.name}</p>
+            {[
+              ["pin", "Visit Us", company.address],
+              ["phone", "Call Us", company.phone],
+              ["mail", "Email Us", company.email],
+            ].map(([icon, title, text]) => (
+              <div className="contact-method" key={title}>
+                <Icon name={icon} size={22} />
+                <div>
+                  <h4>{title}</h4>
+                  {icon === "pin" ? (
+                    <p>{text}</p>
+                  ) : (
+                    <a
+                      href={icon === "phone" ? `tel:${text.replace(/\s/g, "")}` : `mailto:${text}`}
+                    >
+                      {text}
+                    </a>
+                  )}
+                </div>
+              </div>
+            ))}
+            <Photo src={homepage.aboutImage} alt="Modern commercial workplace infrastructure" />
+          </div>
+          <div>
+            {success ? (
+              <div className="success-box" role="status">
+                <Icon name="check" size={38} />
+                <h3>Your demo inquiry has been received.</h3>
+                <p>
+                  Thank you for sharing your project. This demonstration has recorded your inquiry
+                  for the current session; no email has been sent.
+                </p>
+                <Button variant="outline" onClick={() => setSuccess(false)}>
+                  Submit Another Inquiry
+                </Button>
+              </div>
+            ) : (
+              <form noValidate onSubmit={submit}>
+                <div className="form-grid">
+                  {[
+                    ["name", "Full Name", "text", true],
+                    ["company", "Company Name", "text", false],
+                    ["email", "Email Address", "email", true],
+                    ["phone", "Phone Number", "tel", true],
+                    ["service", "Service Required", "select", true],
+                    ["location", "Project Location", "text", true],
+                    ["details", "Project Details", "textarea", true],
+                  ].map(([key, label, type, required]) => (
+                    <div className={`field ${type === "textarea" ? "full-field" : ""}`} key={key}>
+                      <label htmlFor={`contact-${key}`}>
+                        {label}
+                        {required ? " *" : ""}
+                      </label>
+                      {type === "select" ? (
+                        <select
+                          id={`contact-${key}`}
+                          name={key}
+                          required
+                          defaultValue=""
+                          aria-invalid={!!errors[key]}
+                        >
+                          <option value="" disabled>
+                            Select a service
+                          </option>
+                          {visibleEntries(services).map((s) => (
+                            <option key={s.id}>{s.title}</option>
+                          ))}
+                        </select>
+                      ) : type === "textarea" ? (
+                        <textarea
+                          id={`contact-${key}`}
+                          name={key}
+                          required
+                          maxLength={2000}
+                          placeholder="Tell us about your project, requirements and timeline…"
+                          aria-invalid={!!errors[key]}
+                        />
+                      ) : (
+                        <input
+                          id={`contact-${key}`}
+                          name={key}
+                          type={type}
+                          required={required}
+                          maxLength={key === "phone" ? 25 : 255}
+                          placeholder={label}
+                          aria-invalid={!!errors[key]}
+                        />
+                      )}{" "}
+                      {errors[key] && (
+                        <div className="field-error" role="alert">
+                          {errors[key]}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+                <Button className="contact-submit" type="submit">
+                  Send Inquiry
+                  <Icon name="arrow" size={17} />
+                </Button>
+                <p className="form-note">
+                  Demo form. Inquiries remain in this session only; no message is sent.
+                </p>
+              </form>
+            )}
+          </div>
+        </div>
+      </section>
+    </SiteShell>
+  );
+}
+export function LegalPage({ type }) {
+  return (
+    <SiteShell>
+      <PageHeading
+        title={type === "privacy" ? "Privacy Policy — Demo" : "Terms of Use — Demo"}
+        description="Placeholder information for this demonstration website. Final legal policies must be reviewed before production use."
+      />
+      <section className="section">
+        <div className="container legal-content">
+          <h2>{type === "privacy" ? "Demo data handling" : "Demonstration terms"}</h2>
+          <p>
+            This website is a frontend-only demonstration. Contact inquiries and administrator
+            changes stay in React memory for the current session and reset when the page is
+            refreshed. No inquiry email is sent and no database stores your submission.
+          </p>
+          <p>
+            Project and gallery entries are illustrative demo content, not verified work. The admin
+            login is not secure production authentication.
+          </p>
+          <p>
+            These placeholder statements are not a final legal policy. Wattlink should replace them
+            with reviewed terms and a privacy policy before collecting real information.
+          </p>
+        </div>
+      </section>
+    </SiteShell>
+  );
+}

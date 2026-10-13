@@ -1,0 +1,226 @@
+import { useEffect, useRef, useState } from "react";
+import { Link } from "@tanstack/react-router";
+import { fallbackImage } from "../../data/siteData";
+export function Icon({ name = "arrow", size = 20, ...props }) {
+  const paths = {
+    arrow: (
+      <>
+        <path d="M4 12h15M13 5l7 7-7 7" />
+      </>
+    ),
+    diagonal: (
+      <>
+        <path d="M5 19 19 5M5 5h14v14" />
+      </>
+    ),
+    check: <path d="m5 12 4 4L19 6" />,
+    pin: (
+      <>
+        <path d="M20 10c0 6-8 12-8 12S4 16 4 10a8 8 0 1 1 16 0Z" />
+        <circle cx="12" cy="10" r="2.5" />
+      </>
+    ),
+    phone: <path d="M7 3H4c-1 0-1 1-1 2 0 9 7 16 16 16 1 0 2 0 2-1v-3l-5-2-2 2-7-7 2-2-2-5Z" />,
+    mail: (
+      <>
+        <rect x="3" y="5" width="18" height="14" rx="2" />
+        <path d="m3 6 9 7 9-7" />
+      </>
+    ),
+    bolt: <path d="m13 2-9 12h7l-1 8 10-13h-8l1-7Z" />,
+    shield: (
+      <>
+        <path d="m12 3 8 3v6c0 5-8 9-8 9s-8-4-8-9V6l8-3Z" />
+        <path d="m8 12 3 3 5-6" />
+      </>
+    ),
+    building: (
+      <>
+        <path d="M4 21V7l9-4v18M13 10h7v11M2 21h20M7 9h3M7 13h3M7 17h3M16 13h2M16 17h2" />
+      </>
+    ),
+    layers: (
+      <>
+        <path d="m12 3 10 5-10 5L2 8l10-5ZM2 12l10 5 10-5M2 16l10 5 10-5" />
+      </>
+    ),
+    close: <path d="m6 6 12 12M6 18 18 6" />,
+    menu: <path d="M3 6h18M3 12h18M3 18h18" />,
+    chevron: <path d="m7 10 5 5 5-5" />,
+    plus: <path d="M12 4v16M4 12h16" />,
+    edit: (
+      <>
+        <path d="m14 5 5 5M4 20l1-6L16 3l5 5-11 11-6 1Z" />
+      </>
+    ),
+    trash: (
+      <>
+        <path d="M3 6h18M9 6V3h6v3M5 6l1 15h12l1-15M9 10v7M15 10v7" />
+      </>
+    ),
+    eye: (
+      <>
+        <path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12Z" />
+        <circle cx="12" cy="12" r="3" />
+      </>
+    ),
+    up: <path d="m6 14 6-6 6 6" />,
+    down: <path d="m6 10 6 6 6-6" />,
+    search: (
+      <>
+        <circle cx="10" cy="10" r="7" />
+        <path d="m15 15 6 6" />
+      </>
+    ),
+    grid: (
+      <>
+        <rect x="3" y="3" width="7" height="7" />
+        <rect x="14" y="3" width="7" height="7" />
+        <rect x="3" y="14" width="7" height="7" />
+        <rect x="14" y="14" width="7" height="7" />
+      </>
+    ),
+    logout: (
+      <>
+        <path d="M9 4H4v16h5M11 12h10m-5-5 5 5-5 5" />
+      </>
+    ),
+    tool: (
+      <>
+        <path d="m14 6 4-4c4 5 0 10-4 9L5 21l-3-3 10-9c-1-4 1-7 5-7l-3 4Z" />
+      </>
+    ),
+    clock: (
+      <>
+        <circle cx="12" cy="12" r="9" />
+        <path d="M12 6v6l4 2" />
+      </>
+    ),
+  };
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.6"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+      {...props}
+    >
+      {paths[name] || paths.layers}
+    </svg>
+  );
+}
+export function Button({ children, to, variant = "primary", className = "", ...props }) {
+  const cls = `wl-button wl-button-${variant} ${className}`;
+  return to ? (
+    <Link to={to} className={cls} {...props}>
+      {children}
+    </Link>
+  ) : (
+    <button className={cls} {...props}>
+      {children}
+    </button>
+  );
+}
+export function Photo({ src, alt, className = "", eager = false }) {
+  const [failed, setFailed] = useState(false);
+  useEffect(() => setFailed(false), [src]);
+  return (
+    <div className={`photo ${className}`}>
+      <img
+        src={failed ? fallbackImage : src || fallbackImage}
+        alt={failed ? `${alt} — illustrative infrastructure image` : alt}
+        loading={eager ? "eager" : "lazy"}
+        width="800"
+        height="600"
+        onError={() => setFailed(true)}
+      />
+      {failed && <span className="image-fallback">Illustrative infrastructure</span>}
+    </div>
+  );
+}
+export function Brand({ text = "WATTLINK" }) {
+  return (
+    <span className="brand">
+      <svg width="43" height="43" viewBox="0 0 44 44" fill="none" aria-hidden="true">
+        <path d="M2 9h8l6 18 6-18h7L17 37h-7L2 9Z" fill="currentColor" />
+        <path d="M23 9h8l5 15 6-15h-8L28 37h-7l-4-10 6-18Z" fill="currentColor" />
+        <path d="m33 4 4 8 5-8h-9Z" className="logo-accent" />
+      </svg>
+      <span>
+        <strong>{text}</strong>
+        <small>ENGINEERING & CONSULTING</small>
+      </span>
+    </span>
+  );
+}
+export function Eyebrow({ children }) {
+  return (
+    <div className="eyebrow">
+      <span />
+      {children}
+    </div>
+  );
+}
+export function Modal({ children, title, onClose, wide = false }) {
+  const ref = useRef(null);
+  useEffect(() => {
+    const previous = document.activeElement;
+    const old = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    ref.current?.focus();
+    const handle = (e) => {
+      if (e.key === "Escape") onClose();
+      if (e.key === "Tab") {
+        const nodes = ref.current?.querySelectorAll(
+          'button,a,input,select,textarea,[tabindex="0"]',
+        );
+        if (!nodes?.length) return;
+        const first = nodes[0],
+          last = nodes[nodes.length - 1];
+        if (e.shiftKey && document.activeElement === first) {
+          e.preventDefault();
+          last.focus();
+        } else if (!e.shiftKey && document.activeElement === last) {
+          e.preventDefault();
+          first.focus();
+        }
+      }
+    };
+    document.addEventListener("keydown", handle);
+    return () => {
+      document.body.style.overflow = old;
+      document.removeEventListener("keydown", handle);
+      previous?.focus();
+    };
+  }, [onClose]);
+  return (
+    <div
+      className="modal-backdrop"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onClose();
+      }}
+    >
+      <section
+        ref={ref}
+        tabIndex={-1}
+        role="dialog"
+        aria-modal="true"
+        aria-label={title}
+        className={`modal ${wide ? "modal-wide" : ""}`}
+      >
+        <header className="modal-header">
+          <h2>{title}</h2>
+          <Button variant="icon" onClick={onClose} aria-label="Close dialog">
+            <Icon name="close" />
+          </Button>
+        </header>
+        {children}
+      </section>
+    </div>
+  );
+}
